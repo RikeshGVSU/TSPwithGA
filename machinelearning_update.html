@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="http://d3js.org/d3.v3.min.js"></script>
+    <style>
+    circle {
+        fill: blue;
+        stroke: black;
+        stroke-width: 0.7;
+        opacity: 0.7;
+      }
+    arc{
+      fill: none;
+      stroke: red;
+      stroke-width: 3px;
+      stroke-linecap: round;
+      }
+
+    h2
+    {
+      text-align: center;
+        color: black;
+    }
+    </style>
+    <script type="text/javascript">  
+      function draw(geo_data) {
+        // "use strict";
+            var margin = 75,
+            width = 1400 - margin,
+            height = 600 - margin;
+
+        var svg = d3.select("body")
+            .append("svg")
+            .attr("width", width + margin)
+            .attr("height", height + margin)
+            .append('g')
+            .attr('class', 'map');
+
+        var projection = d3.geo.mercator()
+                               .scale(600)
+                               .center([-60,30.5])
+                               .translate( [width , height]);
+
+         //This things helps to change lat long value to the pixel                      
+        var path = d3.geo.path().projection(projection);
+
+        
+        var map = svg.selectAll('path')
+                     .data(geo_data.features)
+                     .enter()
+                     .append('path')
+                     .attr('d', path)
+                     .style('fill', 'lightBlue')
+                     .style('stroke', 'white')
+                     .style('stroke-width', 0.1);
+      
+        function plot_circle(data)
+        {
+
+                
+          svg.append('g')
+          .attr('class','bubble')
+          .selectAll("circle")
+          .data(data)
+          .enter()
+          .append("circle")
+          .text(function(d)
+          {
+            for(var i=0,len=data.length-1;i<len;i++)
+            return i;
+          })
+          .attr("r",5)
+          .attr("transform", function(d) {
+            return "translate(" + projection([d.longitude,d.latitude]
+
+
+              ) + ")";});         
+        console.log(data['latitude']);
+
+        
+        // plot_lines(data);
+        
+       }
+      
+      function plot_lines(data)
+      {
+        var links=[]
+        for(var i=0, len=data.length-1; i<len; i++){
+        links.push({
+            type: "LineString",
+            coordinates: [
+                [ data[i].longitude, data[i].latitude ],
+                [ data[i+1].longitude, data[i+1].latitude ]
+            ]
+        });
+        }
+        var g = svg.append("g");
+        var arcGroup=g.append('g');
+
+        // Standard enter / update 
+      var pathArcs = arcGroup.selectAll(".arc")
+        .data(links);
+
+
+          pathArcs.enter()
+          .append("path").attr({
+              'class': 'arc'
+          }).style({ 
+              fill: 'none',
+          });
+
+    
+            pathArcs.attr({
+                        d: path
+            })
+            .style({
+                stroke: '#0000ff',
+                'stroke-width': '2px'
+            })
+
+
+      }  
+
+      function update()
+      {
+        d3.csv("output6.csv",function(d)
+        {          
+          return d;
+         },plot_lines);
+        
+        
+        svg.selectAll(".arc").transition().remove();
+        
+        
+       
+      console.log("Hello");
+
+      }
+
+
+      var update_arcs = setInterval(function(){
+        update();
+      },4000);
+      
+
+     
+                
+                         
+      d3.csv("output6.csv",function(d)
+        {          
+          d['latitude']=+d['latitude'];
+          d['longitude']=+d['longitude']
+          return d;
+      },plot_circle);
+
+    
+       
+    };
+      </script>
+  </head>
+<body>
+  <script type="text/javascript">
+  /*
+    Use D3 to load the GeoJSON file
+    */
+    
+d3.json("usstates.json", draw);
+  </script>
+</body>
+</html>
